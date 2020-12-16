@@ -27,3 +27,19 @@ pub struct LivenessFailureCheck;
 /// }
 /// ```
 pub struct NoStaticDerefsForNonImmediates;
+
+// Must fail with:
+// error[E0502]: cannot borrow `*cr` as mutable because it is also borrowed as immutable
+/// ```compile_fail
+/// # use ocaml_interop::*;
+/// # use ocaml_interop::bigarray::Array1;
+/// # use std::borrow::Borrow;
+/// # ocaml! { pub fn ocaml_function(arg1: Array1<u8>); }
+/// # let cr = &mut OCamlRuntime::init();
+/// let arr: Vec<u8> = (0..16).collect();
+/// let oarr: OCaml<Array1<u8>> = to_ocaml!(cr, arr.as_slice());
+/// let slice: &[u8] = oarr.borrow();
+/// let result = ocaml_function(cr, &oarr);
+/// println!("{:?}", slice);
+/// # ()
+pub struct BigarraySliceEscapeCheck;

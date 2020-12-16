@@ -4,6 +4,7 @@ use crate::OCamlRuntime;
 use core::marker::PhantomData;
 use core::slice;
 use ocaml_sys::bigarray;
+use std::borrow::Borrow;
 
 /// Bigarray kind
 /// This is unsafe to implement, because it allows arbitrary casts
@@ -113,3 +114,11 @@ unsafe impl<A: BigarrayElt> ToOCaml<Array1<A>> for &[A] {
 // Note: we deliberately don't implement FromOCaml<Array1<A>>,
 // because this trait doesn't have a lifetime parameter
 // and implementing would force a copy.
+impl<'a, A: BigarrayElt> Borrow<[A]> for OCaml<'a, Array1<A>> {
+    fn borrow(&self) -> &[A] {
+        unsafe {
+            let ba = self.custom_ptr_val::<bigarray::Bigarray>();
+            slice::from_raw_parts((*ba).data as *const A, self.len())
+        }
+    }
+}
