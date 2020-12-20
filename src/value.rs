@@ -113,6 +113,20 @@ impl<'a, T> OCaml<'a, T> {
     {
         RustT::from_ocaml(*self)
     }
+
+    /// Meant to match Data_custom_val from mlvalues.h
+    ///
+    /// # Safety
+    ///
+    /// Casts to an arbitrary pointer type, take care before
+    /// dereferencing
+    ///
+    /// Similar to raw(), the resulting pointer can become invalid
+    /// after any call into the OCaml runtime, for example allocating
+    /// OCaml values or calling OCaml functions
+    pub unsafe fn custom_ptr_val<U>(&self) -> *const U {
+        ocaml_sys::field(self.raw, 1) as *const U
+    }
 }
 
 impl OCaml<'static, ()> {
