@@ -285,6 +285,7 @@
 //! - [caml-oxide](https://github.com/stedolan/caml-oxide), the code from that paper.
 //! - [ocaml-rs](https://github.com/zshipko/ocaml-rs), another OCaml<->Rust FFI library.
 
+pub mod bigarray;
 mod boxroot;
 mod closure;
 mod conv;

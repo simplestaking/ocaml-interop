@@ -5,6 +5,9 @@ extern crate ocaml_interop;
 
 use ocaml_interop::{OCaml, OCamlBytes, OCamlRuntime, ToOCaml};
 
+#[cfg(test)]
+use ocaml_interop::{bigarray, BoxRoot};
+
 mod ocaml {
     use ocaml_interop::*;
 
@@ -70,6 +73,7 @@ mod ocaml {
         pub fn raises_message_exception(message: String);
         pub fn raises_nonmessage_exception(unit: ());
         pub fn raises_nonblock_exception(unit: ());
+        pub fn double_u16_array(array: bigarray::Array1<u16>);
     }
 }
 
@@ -141,7 +145,6 @@ pub fn allocate_alot(cr: &mut OCamlRuntime) -> bool {
         let _x: OCaml<OCamlBytes> = vec.to_ocaml(cr);
         let _y: OCaml<OCamlBytes> = vec.to_ocaml(cr);
         let _z: OCaml<OCamlBytes> = vec.to_ocaml(cr);
-        ()
     }
     true
 }
@@ -275,6 +278,23 @@ fn test_polymorphic_variant_conversion() {
     assert_eq!(
         verify_polymorphic_variant_test(&mut cr, ocaml::PolymorphicEnum::Multiple(10, "text".to_string())),
         "Multiple(10, text)".to_owned()
+    );
+}
+
+#[test]
+#[serial]
+fn test_bigarray() {
+    OCamlRuntime::init_persistent();
+    let mut cr = unsafe { OCamlRuntime::recover_handle() };
+
+    let arr: Vec<u16> = (0..16).collect();
+
+    let crr = &mut cr;
+    let arr_ocaml: BoxRoot<bigarray::Array1<_>> = arr.as_slice().to_boxroot(crr);
+    ocaml::double_u16_array(crr, &arr_ocaml);
+    assert_eq!(
+        crr.get(&arr_ocaml).as_slice(),
+        (0..16u16).map(|i| i * 2).collect::<Vec<_>>().as_slice()
     );
 }
 
